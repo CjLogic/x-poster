@@ -1,0 +1,27 @@
+{
+  "name": "x-poster",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "post": "bun run src/index.ts post",
+    "post:dry": "bun run src/index.ts post --dry-run",
+    "list": "bun run src/index.ts list",
+    "list:pending": "bun run src/index.ts list --pending",
+    "add": "bun run src/index.ts add",
+    "skip": "bun run src/index.ts skip",
+    "retry": "bun run src/index.ts retry",
+    "server": "bun run src/server.ts",
+    "dev": "bun run src/server.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "bun-types": "^1.3.0",
+    "typescript": "^5.9.3"
+  }
+}

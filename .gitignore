@@ -1,0 +1,7 @@
+.env
+node_modules/
+content/queue.json
+frontend-dist/
+frontend/node_modules/
+TWEETS.txt
+*.log
