@@ -23,13 +23,21 @@ x-poster gives you:
 
 ## Screenshots
 
-_Dashboard view — all your queued tweets at a glance_
+### Dashboard
 
-_Add Tweet tab — with 280-character counter_
+![Dashboard — all your queued tweets at a glance](screenshots/dashBoard.png)
 
-_Add Thread tab — compose multi-tweet threads_
+### Add Tweet
 
-_Post Next panel — preview, copy, or post directly_
+![Add Tweet tab — with 280-character counter](screenshots/tweetTab.png)
+
+### Add Thread
+
+![Add Thread tab — compose multi-tweet threads](screenshots/threadTab.png)
+
+### Post Next
+
+![Post Next panel — preview, copy, or post directly](screenshots/postNextPanel.png)
 
 ## Quick Start
 
