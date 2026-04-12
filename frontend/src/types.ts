@@ -10,6 +10,7 @@ export interface QueueItem {
   thread_ids?: string[];
   error?: string;
   created_at: string;
+  scheduled_at?: string;
 }
 
 export interface QueueStats {
@@ -17,12 +18,14 @@ export interface QueueStats {
   posted: number;
   failed: number;
   skipped: number;
+  scheduled: number;
 }
 
 export interface AddTweetInput {
   type: "tweet";
   text: string;
   media?: string[];
+  scheduled_at?: string;
 }
 
 export interface AddThreadInput {
@@ -30,6 +33,7 @@ export interface AddThreadInput {
   text: string;
   thread: string[];
   media?: string[];
+  scheduled_at?: string;
 }
 
 export interface PostResult {

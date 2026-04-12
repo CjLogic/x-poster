@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AddThreadInput } from '../types';
-import { Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { HashtagSelector } from './HashtagSelector';
+import { DateTimePicker } from './DateTimePicker';
 
 interface AddThreadFormProps {
   onSubmit: (data: AddThreadInput) => Promise<void>;
@@ -8,7 +10,7 @@ interface AddThreadFormProps {
 
 export function AddThreadForm({ onSubmit }: AddThreadFormProps) {
   const [tweets, setTweets] = useState<string[]>(['', '']);
-  const [media, setMedia] = useState('');
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleTweetChange = (index: number, value: string) => {
@@ -39,10 +41,10 @@ export function AddThreadForm({ onSubmit }: AddThreadFormProps) {
         type: 'thread',
         text: validTweets[0],
         thread: validTweets.slice(1),
-        media: media.trim() ? [media.trim()] : undefined,
+        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
       });
       setTweets(['', '']);
-      setMedia('');
+      setScheduledAt(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -71,6 +73,7 @@ export function AddThreadForm({ onSubmit }: AddThreadFormProps) {
                   placeholder={index === 0 ? "Start a thread..." : "Add another tweet..."}
                   className="min-h-[100px] w-full resize-y rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
                 />
+                {index === 0 && <HashtagSelector text={tweet} onChange={(v) => handleTweetChange(index, v)} />}
                 <div className="flex items-center justify-between">
                   <button
                     type="button"
@@ -100,26 +103,15 @@ export function AddThreadForm({ onSubmit }: AddThreadFormProps) {
         </button>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-zinc-800 pt-4">
-        <label className="flex items-center gap-2 text-sm font-medium text-zinc-400">
-          <ImageIcon className="h-4 w-4" /> Media Path for first tweet (optional)
-        </label>
-        <input
-          type="text"
-          value={media}
-          onChange={(e) => setMedia(e.target.value)}
-          placeholder="/path/to/image.jpg"
-          className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
-        />
-      </div>
-
-      <div className="mt-2 flex justify-end">
+      <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
+        <DateTimePicker value={scheduledAt} onChange={setScheduledAt} label="Schedule" />
+        
         <button
           type="submit"
           disabled={!isValid || isSubmitting}
           className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? 'Adding...' : 'Add Thread to Queue'}
+          {isSubmitting ? 'Adding...' : scheduledAt ? 'Schedule Thread' : 'Add Thread to Queue'}
         </button>
       </div>
     </form>

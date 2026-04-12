@@ -1,11 +1,9 @@
-import { config } from "dotenv";
+import "dotenv/config";
 import { basename, resolve } from "node:path";
 
 import { buildOAuthHeader } from "./auth.ts";
 import { getProjectRoot } from "./queue.ts";
-import type { PostTweetRequest, RateLimitInfo, TweetResponse, TwitterApiError } from "./types.ts";
-
-config();
+import type { OAuthCredentials, PostTweetRequest, RateLimitInfo, TweetResponse, TwitterApiError } from "./types.ts";
 
 const TWEETS_URL = "https://api.x.com/2/tweets";
 const MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json";
@@ -82,10 +80,11 @@ async function handleApiResponse<T>(response: Response, successStatus: number): 
 async function signedFetch(
   url: string,
   init: RequestInit,
+  credentials: OAuthCredentials,
   signatureParameters?: Record<string, string | number | boolean>,
 ): Promise<Response> {
   const method = init.method ?? "GET";
-  const authorization = await buildOAuthHeader(method, url, signatureParameters);
+  const authorization = await buildOAuthHeader(method, url, signatureParameters, credentials);
 
   const headers = new Headers(init.headers);
   headers.set("Authorization", authorization);
@@ -98,6 +97,7 @@ async function signedFetch(
 
 export async function postTweet(
   text: string,
+  credentials: OAuthCredentials,
   replyToId?: string,
   mediaIds?: string[],
 ): Promise<TweetResponse> {
@@ -113,12 +113,12 @@ export async function postTweet(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
-  });
+  }, credentials);
 
   return handleApiResponse<TweetResponse>(response, 201);
 }
 
-export async function postThread(tweets: string[]): Promise<TweetResponse[]> {
+export async function postThread(tweets: string[], credentials: OAuthCredentials): Promise<TweetResponse[]> {
   if (tweets.length === 0) {
     throw new Error("Cannot post an empty thread.");
   }
@@ -127,7 +127,7 @@ export async function postThread(tweets: string[]): Promise<TweetResponse[]> {
   let replyToId: string | undefined;
 
   for (const tweet of tweets) {
-    const response = await postTweet(tweet, replyToId);
+    const response = await postTweet(tweet, credentials, replyToId);
     responses.push(response);
     replyToId = response.data.id;
   }
@@ -135,7 +135,7 @@ export async function postThread(tweets: string[]): Promise<TweetResponse[]> {
   return responses;
 }
 
-export async function uploadMedia(filePath: string): Promise<string> {
+export async function uploadMedia(filePath: string, credentials: OAuthCredentials): Promise<string> {
   const projectRoot = getProjectRoot();
   const absolutePath = resolve(projectRoot, filePath);
   const file = Bun.file(absolutePath);
@@ -151,7 +151,7 @@ export async function uploadMedia(filePath: string): Promise<string> {
   const response = await signedFetch(MEDIA_UPLOAD_URL, {
     method: "POST",
     body: form,
-  });
+  }, credentials);
 
   const payload = await handleApiResponse<{ media_id_string?: string }>(response, 200);
 
@@ -162,8 +162,8 @@ export async function uploadMedia(filePath: string): Promise<string> {
   return payload.media_id_string;
 }
 
-export async function checkRateLimits(): Promise<RateLimitInfo> {
-  const response = await signedFetch(RATE_LIMIT_URL, { method: "GET" }, { resources: "statuses" });
+export async function checkRateLimits(credentials: OAuthCredentials): Promise<RateLimitInfo> {
+  const response = await signedFetch(RATE_LIMIT_URL, { method: "GET" }, credentials, { resources: "statuses" });
   const payload = await handleApiResponse<{
     resources?: {
       statuses?: {

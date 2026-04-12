@@ -13,6 +13,7 @@ export interface QueueItem {
   thread_ids?: string[];
   error?: string;
   created_at: string;
+  scheduled_at?: string;
 }
 
 export interface TweetResponse {
@@ -57,4 +58,19 @@ export interface AddQueueItemInput {
   text: string;
   thread?: string[];
   media?: string[];
+  scheduled_at?: string;
+}
+
+export interface User {
+  username: string;
+  passwordHash: string;
+  twitter?: OAuthCredentials;
+  createdAt: string;
+}
+
+export interface Session {
+  id: string;
+  username: string;
+  createdAt: string;
+  expiresAt: string;
 }

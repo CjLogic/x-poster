@@ -1,6 +1,6 @@
 .env
 node_modules/
-content/queue.json
+content/
 frontend-dist/
 frontend/node_modules/
 TWEETS.txt

@@ -1,4 +1,19 @@
 import { useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { QueueItem } from '../types';
 import { QueueItemCard } from './QueueItemCard';
 
@@ -9,14 +24,34 @@ interface QueueListProps {
   onDelete: (id: number) => void;
   onPostNow: (id: number) => void;
   onDryRun: (id: number) => void;
+  onReorder: (orderedIds: number[]) => void;
 }
 
 type FilterStatus = 'all' | 'pending' | 'posted' | 'failed' | 'skipped';
 
-export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRun }: QueueListProps) {
+export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRun, onReorder }: QueueListProps) {
   const [filter, setFilter] = useState<FilterStatus>('all');
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const filteredItems = items.filter(item => filter === 'all' || item.status === filter);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = filteredItems.findIndex(item => item.id === active.id);
+      const newIndex = filteredItems.findIndex(item => item.id === over.id);
+      const newOrderedItems = [...filteredItems];
+      const [removed] = newOrderedItems.splice(oldIndex, 1);
+      newOrderedItems.splice(newIndex, 0, removed);
+      onReorder(newOrderedItems.map(item => item.id));
+    }
+  };
 
   const tabs: { id: FilterStatus; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -44,25 +79,38 @@ export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRu
         ))}
       </div>
 
-      <div className="flex flex-col gap-4">
-        {filteredItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 py-12 text-zinc-500">
-            <p>No items found in this category.</p>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis]}
+      >
+        <SortableContext
+          items={filteredItems.map(item => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredItems.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 py-12 text-zinc-500">
+                <p>No items found in this category.</p>
+              </div>
+            ) : (
+              filteredItems.map((item, index) => (
+                <QueueItemCard
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  onSkip={onSkip}
+                  onRetry={onRetry}
+                  onDelete={onDelete}
+                  onPostNow={onPostNow}
+                  onDryRun={onDryRun}
+                />
+              ))
+            )}
           </div>
-        ) : (
-          filteredItems.map(item => (
-            <QueueItemCard
-              key={item.id}
-              item={item}
-              onSkip={onSkip}
-              onRetry={onRetry}
-              onDelete={onDelete}
-              onPostNow={onPostNow}
-              onDryRun={onDryRun}
-            />
-          ))
-        )}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }
