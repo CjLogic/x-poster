@@ -224,6 +224,16 @@ export default function App() {
     }
   };
 
+  const handleEdit = async (id: number, text: string, thread?: string[]) => {
+    try {
+      await api.updateItem(id, text, thread);
+      showToast('Item updated', 'success');
+      loadData();
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update item', 'error');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
@@ -325,6 +335,7 @@ export default function App() {
                 onPostNow={handlePostNow}
                 onDryRun={handleDryRun}
                 onReorder={handleReorder}
+                onEdit={handleEdit}
               />
             </div>
           )}

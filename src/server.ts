@@ -16,6 +16,7 @@ import {
   resetToPending,
   getQueueStats,
   updateItemScheduledAt,
+  updateItemText,
 } from "./queue.ts";
 import { createSession, getSession, deleteSession } from "./sessions.ts";
 import { getUser, verifyUser } from "./users.ts";
@@ -491,6 +492,31 @@ async function handleApiRoute(
     try {
       const reordered = reorderItems(username, body.ordered_ids as number[]);
       return ok(reordered);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return err(message, 400);
+    }
+  }
+
+  // PATCH /api/queue/:id (update text/thread)
+  const updateMatch = path.match(/^\/api\/queue\/(\d+)$/);
+  if (method === "PATCH" && updateMatch) {
+    const id = Number(updateMatch[1]);
+    const body = await readBody(request);
+    if (!isRecord(body)) return err("Invalid request");
+    const text = body.text;
+    const thread = body.thread;
+    if (typeof text !== "string" && !Array.isArray(thread)) {
+      return err("Must provide text (string) or thread (string[])");
+    }
+    try {
+      const item = updateItemText(
+        username,
+        id,
+        typeof text === "string" ? text : "",
+        Array.isArray(thread) ? thread as string[] : undefined,
+      );
+      return ok(item);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return err(message, 400);

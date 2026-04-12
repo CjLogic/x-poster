@@ -127,8 +127,15 @@ export async function reorderItems(orderedIds: number[]): Promise<QueueItem[]> {
 
 export async function scheduleItem(id: number, scheduledAt: string | null): Promise<QueueItem> {
   return fetchApi<QueueItem>(`/queue/${id}/schedule`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify({ scheduled_at: scheduledAt }),
+  });
+}
+
+export async function updateItem(id: number, text?: string, thread?: string[]): Promise<QueueItem> {
+  return fetchApi<QueueItem>(`/queue/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ text, thread }),
   });
 }
 

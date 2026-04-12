@@ -238,3 +238,17 @@ export function updateItemScheduledAt(username: string, id: number, scheduledAt:
     return rest as QueueItem;
   });
 }
+
+export function updateItemText(
+  username: string,
+  id: number,
+  text: string,
+  thread?: string[],
+): QueueItem {
+  return updateItem(username, id, (item) => {
+    if (item.type === "thread" && thread) {
+      return { ...item, thread };
+    }
+    return { ...item, text };
+  });
+}

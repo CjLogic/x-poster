@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { QueueItem } from '../types';
 import { StatusBadge } from './StatusBadge';
-import { ExternalLink, Play, SkipForward, RotateCcw, Trash2, MessageSquare, Layers, Copy, Check, GripVertical } from 'lucide-react';
+import { ExternalLink, Play, SkipForward, RotateCcw, Trash2, MessageSquare, Layers, Copy, Check, GripVertical, Pencil, X } from 'lucide-react';
 
 interface QueueItemCardProps {
   item: QueueItem;
@@ -13,6 +13,7 @@ interface QueueItemCardProps {
   onDelete: (id: number) => void;
   onPostNow: (id: number) => void;
   onDryRun: (id: number) => void;
+  onEdit: (id: number, text: string, thread?: string[]) => void;
 }
 
 function getCopyText(item: QueueItem): string {
@@ -22,9 +23,11 @@ function getCopyText(item: QueueItem): string {
   return item.text;
 }
 
-export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNow, onDryRun }: QueueItemCardProps) {
+export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNow, onDryRun, onEdit }: QueueItemCardProps) {
   const isThread = item.type === 'thread';
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(item.text);
 
   const {
     attributes,
@@ -103,6 +106,9 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
                 {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                 Copy
               </button>
+              <button onClick={() => { setEditText(item.text); setIsEditing(true); }} className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700">
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </button>
               <button onClick={() => onDryRun(item.id)} className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700">
                 <Play className="h-3.5 w-3.5" /> Dry Run
               </button>
@@ -174,6 +180,43 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
       {item.error && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
           {item.error.slice(0, 80)}
+        </div>
+      )}
+
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-zinc-100">Edit {isThread ? 'Thread' : 'Tweet'}</h3>
+              <button onClick={() => setIsEditing(false)} className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 p-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600"
+              rows={6}
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onEdit(item.id, editText);
+                  setIsEditing(false);
+                }}
+                disabled={!editText.trim()}
+                className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

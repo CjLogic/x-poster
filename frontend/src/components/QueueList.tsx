@@ -25,11 +25,12 @@ interface QueueListProps {
   onPostNow: (id: number) => void;
   onDryRun: (id: number) => void;
   onReorder: (orderedIds: number[]) => void;
+  onEdit: (id: number, text: string, thread?: string[]) => void;
 }
 
 type FilterStatus = 'all' | 'pending' | 'posted' | 'failed' | 'skipped';
 
-export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRun, onReorder }: QueueListProps) {
+export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRun, onReorder, onEdit }: QueueListProps) {
   const [filter, setFilter] = useState<FilterStatus>('all');
 
   const sensors = useSensors(
@@ -89,7 +90,7 @@ export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRu
           items={filteredItems.map(item => item.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 py-12 text-zinc-500">
                 <p>No items found in this category.</p>
@@ -105,6 +106,7 @@ export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRu
                   onDelete={onDelete}
                   onPostNow={onPostNow}
                   onDryRun={onDryRun}
+                  onEdit={onEdit}
                 />
               ))
             )}
