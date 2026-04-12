@@ -11,9 +11,8 @@ import {
 import {
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { QueueItem } from '../types';
 import { QueueItemCard } from './QueueItemCard';
 
@@ -84,11 +83,10 @@ export function QueueList({ items, onSkip, onRetry, onDelete, onPostNow, onDryRu
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
-        modifiers={[restrictToVerticalAxis]}
       >
         <SortableContext
           items={filteredItems.map(item => item.id)}
-          strategy={verticalListSortingStrategy}
+          strategy={rectSortingStrategy}
         >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredItems.length === 0 ? (
