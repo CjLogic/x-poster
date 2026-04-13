@@ -24,7 +24,7 @@ interface QueueListProps {
   onPostNow: (id: number) => void;
   onDryRun: (id: number) => void;
   onReorder: (orderedIds: number[]) => void;
-  onEdit: (id: number, text: string, thread?: string[]) => void;
+  onEdit: (id: number, text: string, thread?: string[], scheduledAt?: string | null) => void;
 }
 
 type FilterStatus = 'all' | 'pending' | 'posted' | 'failed' | 'skipped';

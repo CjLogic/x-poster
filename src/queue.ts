@@ -242,13 +242,24 @@ export function updateItemScheduledAt(username: string, id: number, scheduledAt:
 export function updateItemText(
   username: string,
   id: number,
-  text: string,
+  text?: string,
   thread?: string[],
+  scheduledAt?: string | null,
 ): QueueItem {
   return updateItem(username, id, (item) => {
+    const updated = { ...item };
     if (item.type === "thread" && thread) {
-      return { ...item, thread };
+      updated.thread = thread;
+    } else if (text !== undefined) {
+      updated.text = text;
     }
-    return { ...item, text };
+    if (scheduledAt !== undefined) {
+      if (scheduledAt) {
+        updated.scheduled_at = scheduledAt;
+      } else {
+        delete updated.scheduled_at;
+      }
+    }
+    return updated;
   });
 }

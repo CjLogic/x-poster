@@ -132,10 +132,10 @@ export async function scheduleItem(id: number, scheduledAt: string | null): Prom
   });
 }
 
-export async function updateItem(id: number, text?: string, thread?: string[]): Promise<QueueItem> {
+export async function updateItem(id: number, text?: string, thread?: string[], scheduledAt?: string | null): Promise<QueueItem> {
   return fetchApi<QueueItem>(`/queue/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ text, thread }),
+    body: JSON.stringify({ text, thread, scheduled_at: scheduledAt }),
   });
 }
 

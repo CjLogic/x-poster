@@ -498,7 +498,7 @@ async function handleApiRoute(
     }
   }
 
-  // PATCH /api/queue/:id (update text/thread)
+  // PATCH /api/queue/:id (update text/thread/schedule)
   const updateMatch = path.match(/^\/api\/queue\/(\d+)$/);
   if (method === "PATCH" && updateMatch) {
     const id = Number(updateMatch[1]);
@@ -506,15 +506,17 @@ async function handleApiRoute(
     if (!isRecord(body)) return err("Invalid request");
     const text = body.text;
     const thread = body.thread;
-    if (typeof text !== "string" && !Array.isArray(thread)) {
-      return err("Must provide text (string) or thread (string[])");
+    const scheduledAt = body.scheduled_at;
+    if (typeof text !== "string" && !Array.isArray(thread) && scheduledAt === undefined) {
+      return err("Must provide text (string), thread (string[]), or scheduled_at");
     }
     try {
       const item = updateItemText(
         username,
         id,
-        typeof text === "string" ? text : "",
+        typeof text === "string" ? text : undefined,
         Array.isArray(thread) ? thread as string[] : undefined,
+        typeof scheduledAt === "string" || scheduledAt === null ? scheduledAt : undefined,
       );
       return ok(item);
     } catch (error) {

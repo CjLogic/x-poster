@@ -224,9 +224,9 @@ export default function App() {
     }
   };
 
-  const handleEdit = async (id: number, text: string, thread?: string[]) => {
+  const handleEdit = async (id: number, text: string, thread?: string[], scheduledAt?: string | null) => {
     try {
-      await api.updateItem(id, text, thread);
+      await api.updateItem(id, text, thread, scheduledAt);
       showToast('Item updated', 'success');
       loadData();
     } catch (error: any) {
