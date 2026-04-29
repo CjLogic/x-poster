@@ -7,17 +7,21 @@ A self-hosted tweet queue manager with a dark-themed web dashboard. Draft tweets
 ![React](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## Why x-poster?
+## Why X-Poster?
 
 X's native composer is fine for single tweets. But if you're building in public, managing a content calendar, or coordinating threads across multiple projects — you need a queue.
 
-x-poster gives you:
+X-Poster gives you:
 
-## x-poster Features
+## X-Poster Features
 
-## Open Source (Base Version)
+## Open Source
 
 Everything here is free and open source. Host it yourself, modify it, etc.
+
+### Dashboard
+
+- Dashboard with your queued X-posts with a nice input to queue your x post
 
 ### Queue Management
 
@@ -87,11 +91,17 @@ Everything here is free and open source. Host it yourself, modify it, etc.
 
 ![Add Thread tab — compose multi-tweet threads](screenshots/threadTab.png)
 
+### Calendar
+
+![Calendar with tweets](screenshots/calendar.png)
+
 ### Post Next
 
 ![Post Next panel — preview, copy, or post directly](screenshots/postNextPanel.png)
 
 ## Quick Start
+
+**Important**: If you don't have API credits, use the Copy button to manually paste tweets into X.
 
 ### Prerequisites
 

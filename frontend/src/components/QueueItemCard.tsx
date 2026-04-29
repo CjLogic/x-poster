@@ -64,7 +64,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  
+
   return (
     <div
       ref={setNodeRef}
@@ -93,7 +93,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
               </span>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <StatusBadge status={item.status} />
             <span className="flex h-6 min-w-6 items-center justify-center rounded bg-zinc-700 px-1.5 text-xs font-medium text-zinc-300">
@@ -101,7 +101,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
             </span>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2">
           {item.status === 'pending' && (
             <>
@@ -109,11 +109,11 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
                 {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                 Copy
               </button>
-              <button onClick={() => { 
+              <button onClick={() => {
                 setEditText(item.text);
                 setEditThread(item.thread || ['']);
                 setEditScheduledAt(item.scheduled_at || null);
-                setIsEditing(true); 
+                setIsEditing(true);
               }} className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700">
                 <Pencil className="h-3.5 w-3.5" /> Edit
               </button>
@@ -128,7 +128,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
               </button>
             </>
           )}
-          
+
           {item.status === 'failed' && (
             <>
               <button onClick={handleCopy} className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700">
@@ -142,7 +142,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
               </button>
             </>
           )}
-          
+
           {item.status === 'skipped' && (
             <>
               <button onClick={handleCopy} className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700">
@@ -166,7 +166,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
               )}
             </>
           )}
-          
+
           <button onClick={() => {
             if (confirm('Delete?')) {
               onDelete(item.id);
@@ -193,7 +193,7 @@ export function QueueItemCard({ item, index, onSkip, onRetry, onDelete, onPostNo
 
       {isEditing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full h-[50%] max-w-4xl rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-zinc-100">Edit {isThread ? 'Thread' : 'Tweet'}</h3>
               <button onClick={() => setIsEditing(false)} className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200">

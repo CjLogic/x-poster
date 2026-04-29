@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { QueueItem } from '../types';
-import { ChevronLeft, ChevronRight, Clock, MessageSquare, Layers, Edit2, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MessageSquare, Layers, Edit2, Trash2, X } from 'lucide-react';
 import * as api from '../api';
 
 interface CalendarViewProps {
@@ -18,6 +18,7 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
   });
   const [scheduledItems, setScheduledItems] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<QueueItem | null>(null);
 
   useEffect(() => {
     const loadScheduled = async () => {
@@ -83,7 +84,7 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
     const endMonth = end.toLocaleDateString([], { month: 'short' });
     const startYear = start.getFullYear();
     const endYear = end.getFullYear();
-    
+
     if (startYear !== endYear) {
       return `${startMonth} ${start.getDate()}, ${startYear} - ${endMonth} ${end.getDate()}, ${endYear}`;
     }
@@ -93,7 +94,7 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
     return `${startMonth} ${start.getDate()} - ${endMonth} ${end.getDate()}, ${startYear}`;
   };
 
-  const truncate = (text: string, maxLength = 40) => {
+  const truncate = (text: string, maxLength = 100) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength - 1) + '…';
   };
@@ -132,15 +133,15 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {weekDays.map((day) => {
           const dayItems = getItemsForDay(day);
           const isCurrentDay = isToday(day);
-          
+
           return (
             <div
               key={day.toISOString()}
-              className={`min-h-[200px] rounded-xl border p-3 ${
+              className={`flex min-h-[200px] w-full flex-col rounded-xl border p-3 ${
                 isCurrentDay
                   ? 'border-zinc-600 bg-zinc-900/80'
                   : 'border-zinc-800 bg-zinc-900/30'
@@ -170,14 +171,15 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
                   </div>
                 ) : (
                   dayItems.map((item) => {
-                    const time = new Date(item.scheduled_at!).toLocaleTimeString([], { 
-                      hour: 'numeric', 
-                      minute: '2-digit' 
+                    const time = new Date(item.scheduled_at!).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit'
                     });
                     return (
                       <div
                         key={item.id}
-                        className="group relative rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-2 hover:border-zinc-600 hover:bg-zinc-800"
+                        onClick={() => setSelectedItem(item)}
+                        className="group relative cursor-pointer rounded-lg border border-zinc-700/50 bg-zinc-800/50 p-2 hover:border-zinc-600 hover:bg-zinc-800"
                       >
                         <div className="flex items-start gap-1.5">
                           {item.type === 'thread' ? (
@@ -195,24 +197,33 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="absolute right-1 top-1 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
-                            onClick={() => onReschedule(item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onReschedule(item.id);
+                            }}
                             className="rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
                             title="Reschedule"
                           >
                             <Clock className="h-3 w-3" />
                           </button>
                           <button
-                            onClick={() => onEdit()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit();
+                            }}
                             className="rounded p-1 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
                             title="Edit"
                           >
                             <Edit2 className="h-3 w-3" />
                           </button>
                           <button
-                            onClick={() => onDelete(item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(item.id);
+                            }}
                             className="rounded p-1 text-zinc-500 hover:bg-red-500/20 hover:text-red-400"
                             title="Delete"
                           >
@@ -228,6 +239,73 @@ export function CalendarView({ onEdit, onDelete, onReschedule }: CalendarViewPro
           );
         })}
       </div>
+
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {selectedItem.type === 'thread' ? (
+                  <Layers className="h-5 w-5 text-zinc-400" />
+                ) : (
+                  <MessageSquare className="h-5 w-5 text-zinc-400" />
+                )}
+                <h3 className="text-lg font-semibold text-zinc-100">
+                  {selectedItem.type === 'thread' ? 'Thread' : 'Tweet'}
+                </h3>
+                <span className="text-xs text-zinc-500">
+                  {new Date(selectedItem.scheduled_at!).toLocaleDateString([], {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric'
+                  })} at {new Date(selectedItem.scheduled_at!).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {selectedItem.type === 'thread' && selectedItem.thread ? (
+              <div className="flex flex-col gap-4">
+                {selectedItem.thread.map((tweet, idx) => (
+                  <div key={idx} className="flex gap-3">
+                    <div className="flex flex-col items-center gap-2 pt-1">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs font-medium text-zinc-400">
+                        {idx + 1}
+                      </span>
+                      {idx < selectedItem.thread!.length - 1 && <div className="w-px flex-1 bg-zinc-800" />}
+                    </div>
+                    <div className="flex-1 rounded-lg bg-zinc-950 p-4 text-sm leading-relaxed text-zinc-300">
+                      {tweet}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg bg-zinc-950 p-4 text-sm leading-relaxed text-zinc-300">
+                {selectedItem.text}
+              </div>
+            )}
+
+            {selectedItem.media && selectedItem.media.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {selectedItem.media.map((m, i) => (
+                  <span key={i} className="rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-400">
+                    📎 {m.split('/').pop()}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

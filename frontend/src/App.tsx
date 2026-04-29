@@ -26,12 +26,12 @@ export default function App() {
   const [rescheduleItemId, setRescheduleItemId] = useState<number | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState<string | null>(null);
   const [twitterCreds, setTwitterCreds] = useState({ consumerKey: '', consumerSecret: '', accessToken: '', accessTokenSecret: '' });
-  
+
   const [items, setItems] = useState<QueueItem[]>([]);
   const [stats, setStats] = useState<QueueStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
-  
+
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const showToast = (message: string, type: ToastType) => {
@@ -259,7 +259,7 @@ export default function App() {
               </div>
               <h1 className="text-lg font-semibold tracking-tight">x-poster</h1>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <nav className="flex items-center gap-1">
                 <button
@@ -321,7 +321,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="animate-in fade-in duration-300">
           {activeTab === 'dashboard' && (
             <div className="flex flex-col gap-8">
@@ -341,7 +341,7 @@ export default function App() {
           )}
 
           {activeTab === 'add' && (
-            <div className="mx-auto max-w-2xl flex flex-col gap-6">
+            <div className="mx-auto max-w-4xl flex flex-col gap-6">
               <div className="flex items-center gap-2 rounded-lg bg-zinc-900/50 p-1">
                 <button
                   onClick={() => setAddMode('tweet')}
@@ -381,16 +381,18 @@ export default function App() {
           )}
 
           {activeTab === 'calendar' && (
-            <CalendarView
-              onEdit={() => {
-                setActiveTab('add');
-              }}
-              onDelete={handleDelete}
-              onReschedule={async (id) => {
-                setRescheduleItemId(id);
-                setShowRescheduleModal(true);
-              }}
-            />
+            <div className="fixed inset-0 top-[60px] z-40 overflow-auto bg-zinc-950 px-4 py-6 sm:px-8">
+              <CalendarView
+                onEdit={() => {
+                  setActiveTab('add');
+                }}
+                onDelete={handleDelete}
+                onReschedule={async (id) => {
+                  setRescheduleItemId(id);
+                  setShowRescheduleModal(true);
+                }}
+              />
+            </div>
           )}
         </div>
       </main>

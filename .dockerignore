@@ -1,0 +1,16 @@
+node_modules
+frontend/node_modules
+.git
+*.log
+.env
+.env.example
+content/queue.json
+content/users.json
+content/sessions.json
+content/queues/*.json
+features.md
+TWEETS.txt
+*.md
+screenshots/
+frontend-dist/
+*.tsbuildinfo
