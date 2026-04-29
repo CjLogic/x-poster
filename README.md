@@ -7,19 +7,75 @@ A self-hosted tweet queue manager with a dark-themed web dashboard. Draft tweets
 ![React](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## Why x-poster?
+## Why X-Poster?
 
 X's native composer is fine for single tweets. But if you're building in public, managing a content calendar, or coordinating threads across multiple projects — you need a queue.
 
-x-poster gives you:
+X-Poster gives you:
 
-- **Visual dashboard** — see all your drafted tweets in one place, filter by status
-- **Thread composer** — write multi-tweet threads with per-tweet character counts
-- **One-click copy** — no API credits? Copy to clipboard and paste into X
-- **API posting** — have X API credits? Post directly with one click
-- **Dry-run mode** — preview exactly what will be posted without touching the API
-- **Queue management** — skip, retry, delete, filter by status
-- **Local-first** — all data stays in a JSON file on your machine, no cloud dependency
+## X-Poster Features
+
+## Open Source
+
+Everything here is free and open source. Host it yourself, modify it, etc.
+
+### Dashboard
+
+- Dashboard with your queued X-posts with a nice input to queue your x post
+
+### Queue Management
+
+- Add individual tweets to queue
+- Add threads (multiple tweets in sequence) to queue
+- Drag-and-drop to reorder queue items
+- Skip, retry, and delete queue items
+- View queue filtered by status (All, Pending, Posted, Failed, Skipped)
+- Copy tweet/thread text to clipboard
+
+### Multi-User Support
+
+- User accounts with username/password authentication
+- Per-user Twitter API credentials
+- Separate queues per user
+- Session-based authentication with cookies
+- Each user posts from their own X account
+
+### Scheduling System
+
+- Schedule tweets and threads for specific date/time
+- Quick-schedule options (Today, Tomorrow)
+- Suggested posting times (static):
+  - Morning (9:00 AM)
+  - Lunch (12:00 PM)
+  - Evening (5:30 PM)
+  - Night (8:00 PM)
+- Custom date/time picker
+- Calendar view to see scheduled posts for the week
+- Lazy scheduler: scheduled posts auto-post when they're due
+- Reschedule or remove schedule from calendar
+
+### Media Upload
+
+- Drag-and-drop images/videos into composer
+- Multiple media files per tweet
+- Visual file list with remove option
+
+### Posting
+
+- Post next pending item manually
+- Dry-run mode to preview before posting
+- Automatic rate limit checking
+- Post using account's Twitter credentials
+
+### Technical
+
+- Self-hosted (no cloud dependency)
+- Dark theme UI
+- Built with Bun, React 19, Tailwind v4, TypeScript
+- OAuth 1.0a implemented from scratch
+- JSON file-based storage per user
+
+---
 
 ## Screenshots
 
@@ -35,11 +91,17 @@ x-poster gives you:
 
 ![Add Thread tab — compose multi-tweet threads](screenshots/threadTab.png)
 
+### Calendar
+
+![Calendar with tweets](screenshots/calendar.png)
+
 ### Post Next
 
 ![Post Next panel — preview, copy, or post directly](screenshots/postNextPanel.png)
 
 ## Quick Start
+
+**Important**: If you don't have API credits, use the Copy button to manually paste tweets into X.
 
 ### Prerequisites
 
@@ -49,9 +111,23 @@ x-poster gives you:
 ### Install
 
 ```bash
-git clone https://github.com/CjRamirez333/x-poster.git
+git clone https://github.com/CjLogic/x-poster.git
 cd x-poster
 bun install
+```
+
+## Self-Hosting Setup
+
+Requirements:
+
+- Bun runtime
+- X Developer account with API credentials
+
+```bash
+bun install
+bun run src/index.ts user add <username> <password>
+bun run src/index.ts user set-twitter <username>
+bun run src/server.ts
 ```
 
 ### Configure
@@ -77,7 +153,7 @@ X_ACCESS_TOKEN_SECRET=your-access-token-secret
 bun run dev
 ```
 
-Open **http://localhost:3001** — that's it.
+Open **<http://localhost:3001>** — that's it.
 
 ## Usage
 
@@ -195,6 +271,42 @@ The Bun server exposes these REST endpoints:
 | POST | `/api/queue/:id/skip` | Mark as skipped |
 | POST | `/api/queue/:id/retry` | Reset failed to pending |
 | DELETE | `/api/queue/:id` | Remove from queue |
+| POST | `/api/auth/login` | Login with username/password |
+| POST | `/api/auth/logout` | Logout |
+| POST | /api/auth/register | Create account |
+| GET | /api/auth/me | Get current user |
+| POST | /api/auth/twitter | Set Twitter credentials |
+| GET | /api/auth/twitter | Check if Twitter is configured |
+
+## Backend
+
+```bash
+src/users.ts - User management with bcrypt password hashing
+src/sessions.ts - Cookie-based session management (7-day expiry)
+src/queue.ts - Per-user queues at content/queues/{username}.json
+src/server.ts - Auth middleware + new endpoints
+Auth Endpoints:
+```
+
+## Login Frontend
+
+```bash
+LoginPage.tsx - Login/register form
+App.tsx - Auth state check, account settings modal
+```
+
+## CLI Commands
+
+```bash
+# Create user
+bun run src/index.ts user add <username> <password>
+
+# Set Twitter credentials for user
+bun run src/index.ts user set-twitter <username>
+
+# Then configure env vars and run:
+bun run src/index.ts user set-twitter myuser
+```
 
 ## Development
 
@@ -232,4 +344,4 @@ PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ---
 
-Built with 🔥 by [Cj Ramirez](https://x.com/CjRamirez333)
+Built with 🔥 by [LOGIX](https://x.com/CjRamirez333)

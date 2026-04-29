@@ -1,7 +1,6 @@
 .env
 node_modules/
-content-copy/
-features.md
+content/queue.json
 frontend-dist/
 frontend/node_modules/
 TWEETS.txt

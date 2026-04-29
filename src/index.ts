@@ -1,4 +1,4 @@
-import { config } from "dotenv";
+import "dotenv/config";
 
 import { checkRateLimits, postThread, postTweet, uploadMedia } from "./api.ts";
 import {
@@ -10,9 +10,9 @@ import {
   markSkipped,
   resetToPending,
 } from "./queue.ts";
+import { createUser, getUser, updateUserTwitter } from "./users.ts";
+import { hashPassword } from "./users.ts";
 import type { AddQueueItemInput, QueueItem, QueueItemStatus } from "./types.ts";
-
-config();
 
 const X_HANDLE = "CjRamirez333";
 
@@ -61,16 +61,29 @@ function parseId(rawValue: string | undefined, command: string): number {
   return id;
 }
 
+function getUsernameFromArgs(args: string[]): { username: string; remainingArgs: string[] } {
+  const userIndex = args.indexOf("--user");
+  if (userIndex === -1) {
+    return { username: "default", remainingArgs: args };
+  }
+  const username = args[userIndex + 1];
+  if (!username) {
+    exitWithError("Missing username after --user");
+  }
+  const remainingArgs = [...args.slice(0, userIndex), ...args.slice(userIndex + 2)];
+  return { username, remainingArgs };
+}
+
 function printUsage(): void {
   console.log("x-poster commands:");
-  console.log("  bun run src/index.ts post [--dry-run]");
-  console.log("  bun run src/index.ts list [--pending|--posted|--failed|--skipped]");
-  console.log('  bun run src/index.ts add "Your tweet text here" [--media ./path.png]');
-  console.log(
-    '  bun run src/index.ts add --thread --text "First tweet" --text "Second tweet"',
-  );
-  console.log("  bun run src/index.ts skip <id>");
-  console.log("  bun run src/index.ts retry <id>");
+  console.log("  bun run src/index.ts user add <username> <password>   Create a new user");
+  console.log("  bun run src/index.ts user set-twitter <username>       Set Twitter credentials for user");
+  console.log("  bun run src/index.ts post [--dry-run] [--user <username>]");
+  console.log("  bun run src/index.ts list [--pending|--posted|--failed|--skipped] [--user <username>]");
+  console.log('  bun run src/index.ts add "Your tweet text here" [--media ./path.png] [--user <username>]');
+  console.log('  bun run src/index.ts add --thread --text "First tweet" --text "Second tweet" [--user <username>]');
+  console.log("  bun run src/index.ts skip <id> [--user <username>]");
+  console.log("  bun run src/index.ts retry <id> [--user <username>]");
 }
 
 function parseAddCommand(args: string[]): ParsedAddCommand {
@@ -202,7 +215,17 @@ function printDryRun(item: QueueItem): void {
 
 async function handlePost(args: string[]): Promise<void> {
   const dryRun = args.includes("--dry-run");
-  const nextItem = getNextPending();
+  const { username } = getUsernameFromArgs(args);
+
+  const user = getUser(username);
+  if (!user) {
+    exitWithError(`User "${username}" not found. Create them with: bun run src/index.ts user add ${username} <password>`);
+  }
+  if (!user.twitter) {
+    exitWithError(`User "${username}" has no Twitter credentials. Set them with: bun run src/index.ts user set-twitter ${username}`);
+  }
+
+  const nextItem = getNextPending(username);
 
   if (!nextItem) {
     console.log("No pending queue items to post.");
@@ -216,7 +239,7 @@ async function handlePost(args: string[]): Promise<void> {
 
   try {
     try {
-      const rateLimit = await checkRateLimits();
+      const rateLimit = await checkRateLimits(user.twitter);
       if (rateLimit.remaining !== null) {
         console.log(
           `Rate limit: ${rateLimit.remaining}/${rateLimit.limit ?? "?"} posts remaining${
@@ -236,7 +259,7 @@ async function handlePost(args: string[]): Promise<void> {
         exitWithError(`Thread #${nextItem.id} has no tweets.`);
       }
 
-      const responses = await postThread(threadTexts);
+      const responses = await postThread(threadTexts, user.twitter);
       const threadIds = responses.map((response) => response.data.id);
       const firstId = threadIds[0];
 
@@ -244,7 +267,7 @@ async function handlePost(args: string[]): Promise<void> {
         exitWithError(`Thread #${nextItem.id} posted but no tweet id was returned.`);
       }
 
-      markPosted(nextItem.id, firstId, threadIds);
+      markPosted(username, nextItem.id, firstId, threadIds);
 
       console.log(`✅ Posted thread #${nextItem.id} (${responses.length} tweets)`);
       responses.forEach((response, index) => {
@@ -254,11 +277,11 @@ async function handlePost(args: string[]): Promise<void> {
     }
 
     const mediaIds = nextItem.media
-      ? await Promise.all(nextItem.media.map((filePath) => uploadMedia(filePath)))
+      ? await Promise.all(nextItem.media.map((filePath) => uploadMedia(filePath, user.twitter!)))
       : [];
 
-    const response = await postTweet(nextItem.text, undefined, mediaIds);
-    markPosted(nextItem.id, response.data.id);
+    const response = await postTweet(nextItem.text, user.twitter, undefined, mediaIds);
+    markPosted(username, nextItem.id, response.data.id);
 
     console.log(`✅ Posted tweet #${nextItem.id}`);
     console.log(`   Tweet ID: ${response.data.id}`);
@@ -266,15 +289,16 @@ async function handlePost(args: string[]): Promise<void> {
     console.log(`   Text: "${response.data.text}"`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    markFailed(nextItem.id, message);
+    markFailed(username, nextItem.id, message);
     throw new Error(`Failed to post queue item #${nextItem.id}: ${message}`);
   }
 }
 
 function handleList(args: string[]): void {
+  const { username, remainingArgs } = getUsernameFromArgs(args);
   const allowedStatuses: QueueItemStatus[] = ["pending", "posted", "failed", "skipped"];
-  const selectedStatus = allowedStatuses.find((status) => args.includes(`--${status}`));
-  const items = loadQueue();
+  const selectedStatus = allowedStatuses.find((status) => remainingArgs.includes(`--${status}`));
+  const items = loadQueue(username);
   const filteredItems = selectedStatus
     ? items.filter((item) => item.status === selectedStatus)
     : items;
@@ -283,10 +307,11 @@ function handleList(args: string[]): void {
 }
 
 function handleAdd(args: string[]): void {
-  const parsed = parseAddCommand(args);
-  const item = addItem(parsed.item);
+  const { username, remainingArgs } = getUsernameFromArgs(args);
+  const parsed = parseAddCommand(remainingArgs);
+  const item = addItem(username, parsed.item);
 
-  console.log(`✅ Added ${item.type} #${item.id} to queue`);
+  console.log(`✅ Added ${item.type} #${item.id} to ${username}'s queue`);
   if (item.type === "thread") {
     console.log(`   Tweets: ${item.thread?.length ?? 0}`);
   }
@@ -295,15 +320,58 @@ function handleAdd(args: string[]): void {
 }
 
 function handleSkip(args: string[]): void {
-  const id = parseId(args[0], "skip");
-  const item = markSkipped(id);
+  const { username, remainingArgs } = getUsernameFromArgs(args);
+  const id = parseId(remainingArgs[0], "skip");
+  const item = markSkipped(username, id);
   console.log(`⏭️  Skipped queue item #${item.id}`);
 }
 
 function handleRetry(args: string[]): void {
-  const id = parseId(args[0], "retry");
-  const item = resetToPending(id);
+  const { username, remainingArgs } = getUsernameFromArgs(args);
+  const id = parseId(remainingArgs[0], "retry");
+  const item = resetToPending(username, id);
   console.log(`🔁 Reset queue item #${item.id} to pending`);
+}
+
+function handleUserAdd(args: string[]): void {
+  const username = args[0];
+  const password = args[1];
+  if (!username || !password) {
+    exitWithError("Usage: bun run src/index.ts user add <username> <password>");
+  }
+  if (password.length < 6) {
+    exitWithError("Password must be at least 6 characters");
+  }
+  try {
+    createUser(username, hashPassword(password));
+    console.log(`✅ Created user "${username}"`);
+  } catch (error) {
+    exitWithError(error instanceof Error ? error.message : "Failed to create user");
+  }
+}
+
+function handleUserSetTwitter(args: string[]): void {
+  const username = args[0];
+  if (!username) {
+    exitWithError("Usage: bun run src/index.ts user set-twitter <username>");
+  }
+
+  const user = getUser(username);
+  if (!user) {
+    exitWithError(`User "${username}" not found. Create them with: bun run src/index.ts user add ${username} <password>`);
+  }
+
+  const consumerKey = process.env.X_CONSUMER_KEY;
+  const consumerSecret = process.env.X_CONSUMER_SECRET;
+  const accessToken = process.env.X_ACCESS_TOKEN;
+  const accessTokenSecret = process.env.X_ACCESS_TOKEN_SECRET;
+
+  if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
+    exitWithError("Missing X OAuth credentials. Set X_CONSUMER_KEY, X_CONSUMER_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET in .env");
+  }
+
+  updateUserTwitter(username, { consumerKey, consumerSecret, accessToken, accessTokenSecret });
+  console.log(`✅ Updated Twitter credentials for "${username}"`);
 }
 
 async function main(): Promise<void> {
@@ -312,6 +380,21 @@ async function main(): Promise<void> {
   if (!command || command === "--help" || command === "help") {
     printUsage();
     return;
+  }
+
+  if (command === "user") {
+    const subcommand = args[0];
+    const subArgs = args.slice(1);
+    switch (subcommand) {
+      case "add":
+        handleUserAdd(subArgs);
+        return;
+      case "set-twitter":
+        handleUserSetTwitter(subArgs);
+        return;
+      default:
+        exitWithError(`Unknown user command: ${subcommand}. Use: user add, user set-twitter`);
+    }
   }
 
   switch (command) {
