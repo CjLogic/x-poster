@@ -338,10 +338,6 @@ cd frontend && npm run build
 
 MIT — use it, fork it, ship it.
 
-## Contributing
-
-PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
 ---
 
-Built with 🔥 by [LOGIX](https://x.com/CjRamirez333)
+Built with 🔥 by [OnPoint Tools](https://x.com/OnPointTools)
