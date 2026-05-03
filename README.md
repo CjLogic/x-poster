@@ -111,7 +111,7 @@ Everything here is free and open source. Host it yourself, modify it, etc.
 ### Install
 
 ```bash
-git clone https://github.com/CjLogic/x-poster.git
+git clone https://github.com/OnPoint-Dev-Tools/x-poster.git
 cd x-poster
 bun install
 ```
